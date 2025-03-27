@@ -1,26 +1,63 @@
 from django.forms import model_to_dict
 from django.shortcuts import render
-from rest_framework import generics
+from rest_framework import generics, viewsets, mixins
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from women.models import Women
+from rest_framework.viewsets import GenericViewSet
+
+from women.models import Women, Category
+from women.permissions import IsAdminOrReadOnly, IsOwnerOrReadOnly
 from women.serializers import WomenSerializer
+
 
 
 class WomenAPIList(generics.ListCreateAPIView):
     queryset = Women.objects.all()
     serializer_class = WomenSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly,)
 
-class WomenAPIUpdate(generics.UpdateAPIView):
+
+class WomenAPIUpdate(generics.RetrieveUpdateAPIView):
     queryset = Women.objects.all()
     serializer_class = WomenSerializer
+    permission_classes = (IsOwnerOrReadOnly, )
 
 
-class WomenAPIDetailView(generics.RetrieveUpdateDestroyAPIView):
+class WomenAPIDestroy(generics.RetrieveDestroyAPIView):
     queryset = Women.objects.all()
     serializer_class = WomenSerializer
+    permission_classes = (IsAdminOrReadOnly, )
 
 
+
+# Автоматически создаёт представление для обработки url, позволяет делать всё что указано в mixins (которые объединены
+# В GenerivViewSet, который мы просто разобрали на части.
+# class WomenViewSet(mixins.CreateModelMixin,
+#                    mixins.RetrieveModelMixin,
+#                    mixins.UpdateModelMixin,
+#                    mixins.DestroyModelMixin,
+#                    mixins.ListModelMixin,
+#                    GenericViewSet):
+#     queryset = Women.objects.all()
+#     serializer_class = WomenSerializer
+#
+#     @action(methods=['get'], detail=False)
+#     def category(selfself, request):
+#         cats = Category.objects.all()
+#         return Response({'cats': [c.name for c in cats]})
+
+#
+
+
+
+
+
+
+
+# Тут мы можем ручками создавать представления для запросов, где для каждого типа запроса индивидуально проводить
+# свои определенные операции
 # class WomenAPIView(APIView):
 #     def get(self, request):
 #         """Преобразовываем model данные в json byte string и отправляем пользователю"""
