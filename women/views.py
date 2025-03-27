@@ -17,15 +17,37 @@ class WomenAPIView(APIView):
         """Преобразовываем json byte string полученный от пользователя в model данные и добавляем в БД"""
         serializer = WomenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        serializer.save() #Этот метод вызовет функцию create из serializers
+        return Response({'post': serializer.data})
 
-        #Добавляем в БД сериализованные данные
-        post_new = Women.objects.create(
-            title=request.data['title'],
-            content=request.data['content'],
-            cat_id=request.data['cat_id'],
-        )
-        return Response({'post': WomenSerializer(post_new).data})
+    def put(self, request, *args, **kwargs):
+        pk = kwargs.get("pk", None)
+        if not pk:
+            return Response({"error": "Method PUT not allowed"})
 
+        try:
+            instance = Women.objects.get(pk=pk)
+        except:
+            return Response({"error": "Object does not exist"})
+
+        serializer = WomenSerializer(data=request.data, instance=instance) # Если в сериализаторе передавать сразу
+        # данные для модели и при этом ещё строку из модели, то в сериализаторе будет вызван update
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"post": serializer.data})
+
+    def delete(self, request, *args, **kwargs):
+        pk = kwargs.get("pk", None)
+        if not pk:
+            return Response({"error": "Method PUT not allowed"})
+
+        try:
+            instance = Women.objects.get(pk=pk)
+            instance.delete()
+        except:
+            return Response({"error": "Object does not exist"})
+
+        return Response({"post": "deleted post" + str(pk)})
 
 # class WomenAPIView(generics.ListAPIView):
     # queryset = Women.objects.all()
